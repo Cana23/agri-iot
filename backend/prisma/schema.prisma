@@ -6,10 +6,46 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  output   = "../node_modules/@prisma/client"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  email     String    @unique
+  password  String
+  role      String    @default("user")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Parcels   Parcel[]
+}
+
+model Parcel {
+  id          Int       @id @default(autoincrement())
+  name        String
+  location    String
+  cropType    String
+  responsible String
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      Int?
+  User        User?     @relation(fields: [userId], references: [id])
+  SensorReadings SensorReading[]
+}
+
+model SensorReading {
+  id          Int       @id @default(autoincrement())
+  sensorType  String
+  value       Float
+  unit        String
+  timestamp   DateTime  @default(now())
+  parcelId    Int?
+  Parcel      Parcel?   @relation(fields: [parcelId], references: [id])
+  createdAt   DateTime  @default(now())
 }
