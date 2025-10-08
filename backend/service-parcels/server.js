@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const { PrismaClient } = require('@prisma/client');
-const parcelRoutes = require('./routes/parcels.routes');
+const parcelRoutes = require('./src/routes/parcels.routes');
 
 const prisma = new PrismaClient();
 const app = express();
