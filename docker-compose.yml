@@ -1,78 +1,29 @@
 version: "3.9"
 services:
-  db:
+  postgres:
     image: postgres:15
-    container_name: iot_postgres
+    container_name: postgres_iot
     restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: iot_db
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: ethan
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: iot_agro
     volumes:
-      - ./db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
-  service-auth:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: service_auth
-    working_dir: /app/service-auth
-    command: ["npm", "start"]
+  mongo:
+    image: mongo:7
+    container_name: mongo_iot
+    restart: always
     ports:
-      - "6000:6000"
-    env_file:
-      - ./service-auth/.env
-    depends_on:
-      - db
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: sensors_db
+    volumes:
+      - mongo_data:/data/db
 
-  service-sensors:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: service_sensors
-    working_dir: /app/service-sensors
-    command: ["npm", "start"]
-    ports:
-      - "3001:3001"
-    env_file:
-      - ./service-sensors/.env
-    depends_on:
-      - service-ingest
-
-  service-ingest:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: service_ingest
-    working_dir: /app/service-ingest
-    command: ["npm", "start"]
-    ports:
-      - "4000:4000"
-    env_file:
-      - ./service-ingest/.env
-    depends_on:
-      - db
-
-  service-parcels:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: service_parcels
-    working_dir: /app/service-parcels
-    command: ["npm", "start"]
-    ports:
-      - "5000:5000"
-    env_file:
-      - ./service-parcels/.env
-    depends_on:
-      - db
-
-  frontend:
-    build: ../frontend
-    container_name: frontend
-    ports:
-      - "5173:5173"
-    depends_on:
-      - service-auth
+volumes:
+  postgres_data:
+  mongo_data:

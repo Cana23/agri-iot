@@ -1,9 +1,8 @@
-import express from "express";
-import { startSensors } from "../controllers/sensor.controller.js";
-
+const express = require('express');
+const { getAllSensors, getByType } = require('../controllers/sensor.controller');
 const router = express.Router();
 
-// Endpoint para iniciar los sensores
-router.get("/start", startSensors);
+router.get('/all', getAllSensors);
+router.get('/:type', getByType); // temperatura, humedad, etc.
 
-export default router;
+module.exports = router;
