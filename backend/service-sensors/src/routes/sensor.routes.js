@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAllSensors, getByType } = require('../controllers/sensors.controller');
+const { getAllSensors, getByType } = require('../controllers/sensor.controller');
 const { verifyToken } = require('../../../service-auth/src/middleware/auth.middleware');
 const router = express.Router();
 
