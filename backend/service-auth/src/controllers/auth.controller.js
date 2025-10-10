@@ -1,20 +1,37 @@
+// archivo: backend/service-auth/src/controllers/auth.controller.js
+
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = new PrismaClient();
 
-exports.register = async (req, res) => {
-  const { username, email, password, role } = req.body;
-  const hashed = await bcrypt.hash(password, 10);
+// Función auxiliar para generar el token
+const generateToken = (user) => {
+  return jwt.sign(
+    { id: user.id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' }
+  );
+};
 
+exports.register = async (req, res) => {
+  const { username, email, password } = req.body;
+  
   try {
+    const hashed = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { username, email, password: hashed, role }
+      data: { username, email, password: hashed, role: 'admin' }
     });
 
-    res.status(201).json({ id: user.id, username: user.username, email: user.email, role: user.role });
+    const token = generateToken(user);
+    // Preparamos la respuesta del usuario sin la contraseña
+    const userResponse = { id: user.id, username: user.username, email: user.email, role: user.role };
+    
+    // Devolvemos AMBOS, el token y el usuario
+    res.status(201).json({ token, user: userResponse });
+
   } catch (err) {
-    res.status(400).json({ error: 'Usuario o correo ya existe' });
+    res.status(400).json({ message: 'El correo electrónico ya está en uso' });
   }
 };
 
@@ -22,16 +39,16 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
   const user = await prisma.user.findUnique({ where: { email } });
 
-  if (!user) return res.status(401).json({ error: 'Credenciales inválidas' });
+  if (!user) return res.status(401).json({ message: 'Credenciales inválidas' });
 
   const valid = await bcrypt.compare(password, user.password);
-  if (!valid) return res.status(401).json({ error: 'Credenciales inválidas' });
+  if (!valid) return res.status(401).json({ message: 'Credenciales inválidas' });
 
-  const token = jwt.sign(
-    { id: user.id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '1h' }
-  );
+  const token = generateToken(user);
 
-  res.json({ token });
+  // Preparamos la respuesta del usuario sin la contraseña
+  const userResponse = { id: user.id, username: user.username, email: user.email, role: user.role };
+  
+  // Devolvemos AMBOS, el token y el usuario
+  res.json({ token, user: userResponse });
 };
