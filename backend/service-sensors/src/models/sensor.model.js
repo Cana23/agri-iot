@@ -11,4 +11,7 @@ const sensorSchema = new mongoose.Schema({
   }
 });
 
+sensorSchema.index({ type: 1, timestamp: -1 });
+
+
 module.exports = mongoose.model('Sensor', sensorSchema);

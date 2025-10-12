@@ -13,6 +13,7 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 app.use('/api/parcels', parcelRoutes);
+app.get('/health', (req, res) => res.status(200).send('OK'));
 
 const PORT = process.env.PARCEL_PORT || 3003;
 app.listen(PORT, () => console.log(`Parcel service running on port ${PORT}`));

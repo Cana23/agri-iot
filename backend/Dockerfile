@@ -4,10 +4,10 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --production
 
 COPY . .
 
-RUN npx prisma generate
+RUN npx prisma generate || true
 
-CMD ["npm", "run", "start:all"]
+CMD ["node", "index.js"]

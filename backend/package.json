@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:sensors": "node service-sensors/server.js",
+    "start:parcels": "node service-parcels/server.js",
+    "start:auth": "node service-auth/server.js"
   },
   "keywords": [],
   "author": "",

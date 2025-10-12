@@ -17,26 +17,25 @@ async function fetchAndStoreSensors() {
       const entries = data[type];
       console.log(`[🔁] Procesando ${entries.length} registros de tipo "${type}"`);
 
-      const tasks = entries.map(async entry => {
-        try {
-          const exists = await Sensor.exists({ type, timestamp: entry.timestamp });
-          if (!exists) {
-            await Sensor.create({ type, ...entry });
-            console.log(`[✅] Guardado: ${type} @ ${entry.timestamp}`);
-          } else {
-            console.log(`[🟡] Duplicado ignorado: ${type} @ ${entry.timestamp}`);
-          }
-        } catch (err) {
-          console.error(`[❌] Error al guardar ${type} @ ${entry.timestamp}:`, err.message);
-        }
-      });
+      const operations = entries.map(entry => ({
+        updateOne: {
+          filter: { type, timestamp: entry.timestamp },
+          update: { $setOnInsert: { type, ...entry } },
+          upsert: true, // inserta si no existe
+        },
+      }));
 
-      await Promise.allSettled(tasks);
+      if (operations.length > 0) {
+        const result = await Sensor.bulkWrite(operations, { ordered: false });
+        console.log(
+          `[✅] ${type}: ${result.upsertedCount} nuevos, ${result.matchedCount} existentes`
+        );
+      }
     }
 
     console.log('[✔] Finalizado almacenamiento de sensores');
   } catch (error) {
-    console.error('[❌] Error al obtener sensores:', error.message);
+    console.error('[❌] Error al obtener o almacenar sensores:', error.message);
   }
 }
 
