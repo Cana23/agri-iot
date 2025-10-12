@@ -1,11 +1,11 @@
 const express = require('express');
 const { getAllSensors, getByType } = require('../controllers/sensor.controller');
-const { verifyToken } = require('../../../service-auth/src/middleware/auth.middleware');
+
 const router = express.Router();
+const verifyToken = require('../middleware/auth');
 
-router.use(verifyToken);
 
-router.get('/all', getAllSensors);
-router.get('/:type', getByType);
+router.get('/all',verifyToken, getAllSensors);
+router.get('/:type',verifyToken, getByType);
 
 module.exports = router;
