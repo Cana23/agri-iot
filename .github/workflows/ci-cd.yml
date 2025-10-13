@@ -11,7 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx (for docker on runner)
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image tagged by commit SHA
@@ -20,54 +20,59 @@ jobs:
           docker build -t backend:${{ github.sha }} -f Dockerfile .
           docker tag backend:${{ github.sha }} backend:latest
 
-      - name: Save previous 'stable' image if exists
-        run: |
-          # If exists, create a local reference
-          docker image inspect backend:stable >/dev/null 2>&1 && echo "stable exists" || echo "no stable image"
-
       - name: Start services with docker-compose
         run: |
-          cd ..
-          docker compose up -d --build
+          docker compose -f docker-compose.yml up -d --build
+        env:
+          # Variables globales
+          SENSOR_API_URL: ${{ secrets.SENSOR_API_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          MONGO_URL: ${{ secrets.MONGO_URL }}
+          FETCH_INTERVAL_MS: ${{ secrets.FETCH_INTERVAL_MS }}
 
-      - name: Wait for health endpoints (try for 60s)
+          # service-auth
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          AUTH_PORT: ${{ secrets.AUTH_PORT }}
+
+          # service-parcels
+          PARCEL_PORT: ${{ secrets.PARCEL_PORT }}
+
+          # service-sensors
+          SENSOR_PORT: ${{ secrets.SENSOR_PORT }}
+          SENSOR_API: ${{ secrets.SENSOR_API }}
+
+      - name: Wait for health endpoints
         run: |
-          set -e
-          OK=true
-          for i in $(seq 1 12); do
-            echo "health check attempt $i..."
-            curl -fsS http://localhost:3002/health || echo "sensors down"
-            curl -fsS http://localhost:3003/health || echo "parcels down"
-            curl -fsS http://localhost:3004/health || echo "auth down"
-            # Evaluate: require all three to respond
-            if curl -fsS http://localhost:3002/health && curl -fsS http://localhost:3003/health && curl -fsS http://localhost:3004/health; then
-              echo "All healthy"
+          for i in {1..12}; do
+            echo "Checking health... attempt $i"
+            if curl -fsS http://localhost:3002/health && \
+               curl -fsS http://localhost:3003/health && \
+               curl -fsS http://localhost:3004/health; then
+              echo "✅ All services healthy!"
               exit 0
             fi
             sleep 5
           done
-          echo "Health checks failed"
+          echo "❌ Services failed health check"
           exit 1
 
-      - name: On success, tag image as stable
+      - name: Tag as stable if success
         if: success()
         run: |
           docker tag backend:${{ github.sha }} backend:stable
-          echo "Deployed and tagged stable."
+          echo "✅ Deployed as stable."
 
       - name: Rollback to stable on failure
         if: failure()
         run: |
           echo "Attempting rollback..."
-          # If stable exists, retag it as latest and deploy
           if docker image inspect backend:stable >/dev/null 2>&1; then
             docker tag backend:stable backend:latest
             docker compose down
             docker compose up -d
             echo "Rollback executed to backend:stable"
-            exit 0
           else
-            echo "No backend:stable found — stopping compose"
+            echo "⚠️ No stable image found, stopping services."
             docker compose down
             exit 1
           fi

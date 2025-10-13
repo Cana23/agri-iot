@@ -1,4 +1,5 @@
 version: "3.9"
+
 services:
   postgres:
     image: postgres:15
@@ -42,6 +43,7 @@ services:
     restart: on-failure
     command: ["node", "service-sensors/server.js"]
     env_file:
+      - ./backend/.env
       - ./backend/service-sensors/.env
     ports:
       - "3002:3002"
@@ -62,6 +64,7 @@ services:
     restart: on-failure
     command: ["node", "service-parcels/server.js"]
     env_file:
+      - ./backend/.env
       - ./backend/service-parcels/.env
     ports:
       - "3003:3003"
@@ -81,6 +84,7 @@ services:
     restart: on-failure
     command: ["node", "service-auth/server.js"]
     env_file:
+      - ./backend/.env
       - ./backend/service-auth/.env
     ports:
       - "3004:3004"
