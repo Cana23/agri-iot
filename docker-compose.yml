@@ -42,9 +42,12 @@ services:
     container_name: service_sensors
     restart: on-failure
     command: ["node", "service-sensors/server.js"]
-    env_file:
-      - ./backend/.env
-      - ./backend/service-sensors/.env
+    environment:
+    SENSOR_API_URL: ${SENSOR_API_URL}
+    MONGO_URL: ${MONGO_URL}
+    SENSOR_PORT: ${SENSOR_PORT}
+    SENSOR_API: ${SENSOR_API}
+    JWT_SECRET: ${JWT_SECRET}
     ports:
       - "3002:3002"
     depends_on:
@@ -63,9 +66,9 @@ services:
     container_name: service_parcels
     restart: on-failure
     command: ["node", "service-parcels/server.js"]
-    env_file:
-      - ./backend/.env
-      - ./backend/service-parcels/.env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      PARCEL_PORT: ${PARCEL_PORT}
     ports:
       - "3003:3003"
     depends_on:
@@ -83,9 +86,10 @@ services:
     container_name: service_auth
     restart: on-failure
     command: ["node", "service-auth/server.js"]
-    env_file:
-      - ./backend/.env
-      - ./backend/service-auth/.env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      AUTH_PORT: ${AUTH_PORT}
     ports:
       - "3004:3004"
     depends_on:
