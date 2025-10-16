@@ -90,6 +90,23 @@ services:
       timeout: 5s
       retries: 5
 
+  frontend:
+    build:
+      context: ./campo-verde-vision
+      dockerfile: Dockerfile
+    container_name: frontend_iot_dev
+    restart: on-failure
+    command: npm run dev -- --host
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./campo-verde-vision:/app
+      - /app/node_modules
+    environment:
+      VITE_API_AUTH_URL: http://service_auth:3004
+      VITE_API_PARCELS_URL: http://service_parcels:3002
+      VITE_API_SENSORS_URL: http://service_sensors:3003
+
 volumes:
   postgres_data:
   mongo_data:
