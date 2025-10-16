@@ -20,4 +20,4 @@ COPY service-auth/ ./
 
 EXPOSE 3004
 
-CMD ["node", "server.js"]
+CMD npx prisma migrate deploy && node server.js
