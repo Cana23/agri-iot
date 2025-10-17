@@ -1,0 +1,18 @@
+# Configuración no sensible para tus servicios
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+data:
+  POSTGRES_DB: "iot_agro"
+  POSTGRES_USER: "ethan"
+  DATABASE_URL_AUTH: "postgresql://ethan:1234@postgres-service:5432/iot_agro?schema=public"
+  DATABASE_URL_PARCELS: "postgresql://ethan:1234@postgres-service:5432/iot_agro"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-config
+data:
+  MONGO_URL: "mongodb://mongo-service:27017/sensors_db"

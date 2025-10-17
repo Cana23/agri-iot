@@ -1,0 +1,56 @@
+# Despliega el frontend en modo DESARROLLO
+# Este archivo es especial para que puedas ver tus cambios en tiempo real.
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  selector:
+    app: frontend
+  ports:
+  - port: 8080       # Puerto que otros servicios (como el Ingress) usarán
+    targetPort: 8080 # Puerto del contenedor (donde corre 'npm run dev')
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: agri-iot/frontend:latest # La imagen de desarrollo que construiste
+        imagePullPolicy: Never # Importante: Usa la imagen local, no intentes descargarla
+        ports:
+        - containerPort: 8080
+        # --- LA MAGIA DEL LIVE-RELOADING ---
+        # Monta tu código local (que 'kind' ya expuso) dentro del contenedor
+        volumeMounts:
+        - name: frontend-source # Monta el código fuente
+          mountPath: /app
+        - name: node-modules-volume # Evita que 'node_modules' local sobreescriba el del contenedor
+          mountPath: /app/node_modules
+        # Configura las URLs de la API para que apunten al Ingress
+        env:
+        - name: VITE_API_AUTH_URL
+          value: "http://localhost/api/auth"
+        - name: VITE_API_PARCELS_URL
+          value: "http://localhost/api/parcels"
+        - name: VITE_API_SENSORS_URL
+          value: "http://localhost/api/sensors"
+      volumes:
+      - name: frontend-source
+        hostPath:
+          path: /local/campo-verde-vision # La ruta que configuramos en 'kind-config.yaml'
+          type: Directory
+      - name: node-modules-volume # Un volumen vacío para 'proteger' node_modules
+        emptyDir: {}
+

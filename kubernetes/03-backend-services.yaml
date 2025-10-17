@@ -1,0 +1,133 @@
+# Despliega los microservicios de tu backend
+# --- Service Auth ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  selector:
+    app: service-auth
+  ports:
+  - port: 3004
+    targetPort: 3004
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-auth
+  template:
+    metadata:
+      labels:
+        app: service-auth
+    spec:
+      containers:
+      - name: service-auth
+        image: agri-iot/service-auth:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3004
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: postgres-config
+              key: DATABASE_URL_AUTH
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: agri-iot-secrets
+              key: JWT_SECRET
+# --- Service Parcels ---
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: parcels-service
+spec:
+  selector:
+    app: service-parcels
+  ports:
+  - port: 3003
+    targetPort: 3003
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: parcels-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-parcels
+  template:
+    metadata:
+      labels:
+        app: service-parcels
+    spec:
+      containers:
+      - name: service-parcels
+        image: agri-iot/service-parcels:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3003
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: postgres-config
+              key: DATABASE_URL_PARCELS
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: agri-iot-secrets
+              key: JWT_SECRET
+# --- Service Sensors ---
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sensors-service
+spec:
+  selector:
+    app: service-sensors
+  ports:
+  - port: 3002
+    targetPort: 3002
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sensors-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-sensors
+  template:
+    metadata:
+      labels:
+        app: service-sensors
+    spec:
+      containers:
+      - name: service-sensors
+        image: agri-iot/service-sensors:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3002
+        env:
+        - name: MONGO_URL
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-config
+              key: MONGO_URL
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: agri-iot-secrets
+              key: JWT_SECRET
+
